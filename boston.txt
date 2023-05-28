@@ -1,0 +1,35 @@
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from tensorflow import keras
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.compose import make_column_transformer
+(x_train,y_train),(x_test,y_test)=keras.datasets.boston_housing.load_data(test_split=0.2)
+x_train_df=pd.DataFrame(x_train)
+y_train_df=pd.DataFrame(y_train)
+x_train_df.head(10)
+x_train_df.info()
+y_train_df.info()
+x_train_df.describe()
+ct=make_column_transformer(
+    (MinMaxScaler(),[0,1,2,3,4,5,6,7,8,9,10,11,12])
+)
+x_train=ct.fit_transform(x_train).astype('float32')
+x_test=ct.transform(x_test).astype('float32')
+y_train=y_train.astype('float32')
+y_test=y_test.astype('float32')
+
+x_train,x_val,y_train,y_val=train_test_split(x_train,y_train,test_size=0.1,random_state=42)
+model=keras.Sequential([
+    keras.layers.Dense(10,activation='relu',input_shape=(x_train.shape[1],)),
+    keras.layers.Dense(100,activation='relu'),
+    keras.layers.Dense(1),
+])
+model.compile(loss='mean_squared_error',optimizer='RMSprop',metrics=['mse'])
+result=model.fit(x_train,y_train,epochs=100,batch_size=32,validation_data=(x_val,y_val))
+score=model.evaluate(x_test,y_test)
+pd.DataFrame(result,result).plot(figsize=(6,4),xlabel="Epochs",y_label='loss',title='loss curver')
+plt.show()
+y_pred=model.predict(x_test)
+y_pred[0]

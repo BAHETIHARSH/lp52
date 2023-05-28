@@ -1,0 +1,89 @@
+#include <iostream>
+#include <queue>
+#include <stack>
+#include <omp.h>
+#include <vector>
+using namespace std;
+vector<vector<int>>adj_list;
+    vector<bool>visited;
+
+void bfs(int start_node){
+    queue<int>q;
+    q.push(start_node);
+    visited[start_node]=true;
+    
+    while(!q.empty()){
+        int curr_node=q.front();
+        q.pop();
+        
+        #pragma omp parallel for shared (adj_list,visited) schedule(dynamic)
+        for(int i=0;i<adj_list[curr_node].size();i++){
+            int neighbor=adj_list[curr_node][i];
+            if(!visited[neighbor]){
+                visited[neighbor]=true;
+                q.push(neighbor);
+            }
+        }
+    }
+}
+
+void dfs(int start_node){
+    stack<int>s;
+    s.push(start_node);
+    visited[start_node]=true;
+    
+    while(!s.empty()){
+        int curr_node=s.top();
+        s.pop();
+        
+        #pragma omp parallel for shared (adj_list,visited) schedule (dynamic)
+        for(int i=0;i<adj_list[curr_node].size();i++){
+            int neighbor=adj_list[curr_node][i];
+            if(!visited[neighbor]){
+                visited[neighbor]=true;
+                s.push(neighbor);
+            }
+        }
+    }
+}
+
+int main(){
+    int num_nodes,num_edges;
+    cin>>num_nodes>>num_edges;
+    
+    adj_list.resize(num_nodes);
+    visited.resize(num_nodes);
+    
+    for(int i=0;i<num_edges;i++){
+        int u, v;
+        cin>>u>>v;
+        adj_list[v].push_back(u);
+        adj_list[u].push_back(v);
+        
+    }
+    int start_node;
+    cin>>start_node;
+    
+    bfs(start_node);
+    
+    for(int i=0;i<num_nodes;i++){
+        if(visited[i]){
+            cout<<i<<" ";
+        }
+    }
+    cout<<endl;
+    visited.assign(num_nodes,false);
+    
+    
+    dfs(start_node);
+    
+    for(int i=0;i<num_nodes;i++){
+        if(visited[i]){
+            cout<<i<<" ";
+            
+        }
+    }
+    cout<<endl;
+    
+    return 0;
+}
